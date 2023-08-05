@@ -12,6 +12,7 @@ includes:
 -Export Directory
 
 alsch092 @ github
+
 */
 
 #include <winternl.h>
@@ -335,36 +336,6 @@ void ParseSections()
 	printf("_______________________________\n");
 }
 
-void ModifyTlsCallbacks(UINT64 newTlsCallback) {
-	
-	// Load the image using MapAndLoad from dbghelp library
-	LOADED_IMAGE loadedImage;
-	if (!MapAndLoad(NULL, NULL, &loadedImage, TRUE, TRUE)) {
-		printf("Failed to load the image.\n");
-		return;
-	}
-
-	// Get the address of the TLS directory
-	IMAGE_TLS_DIRECTORY32* tlsDirectory = (IMAGE_TLS_DIRECTORY32*)ImageDirectoryEntryToData(loadedImage.MappedAddress, FALSE, IMAGE_DIRECTORY_ENTRY_TLS, NULL);
-
-	if (!tlsDirectory) {
-		printf("Failed to locate the TLS directory.\n");
-		UnMapAndLoad(&loadedImage);
-		return;
-	}
-
-	// Modify the pointer to the TLS callback
-	tlsDirectory->AddressOfCallBacks = newTlsCallback;
-
-	// Unmap the image from memory, saving the changes
-	if (!UnMapAndLoad(&loadedImage)) {
-		printf("Failed to unmap and save the image.\n");
-		return;
-	}
-
-	printf("TLS Callbacks modified successfully.\n");
-}
-
 //Function to parse the TLS callbacks of the current module
 void ParseTLSCallbacks() 
 {
@@ -535,7 +506,6 @@ void ParseHeaders()
 
 int main()
 {
-	ModifyTlsCallbacks((UINT64)main);
 	GetAllThreadTEBs();
 	ParsePEB();
 	ParseTIB();
